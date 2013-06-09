@@ -128,7 +128,7 @@ var mongoStuffs = function () {
 events.once('data:ready', function () {
   mongoStuffs();
   // triggers mongo events
-  mongoose.connect('mongodb://localhost/incidents');
+  mongoose.connect('mongodb://localhost/policereports');
 });
 
 
