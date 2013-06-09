@@ -133,6 +133,8 @@ events.once('data:ready', function () {
 
 
 // request feed
+// http://www.portlandonline.com/cgis/metadata/viewer/display.cfm?Meta_layer_id=53215&Db_type=sde&City_Only=False
+
 //request('http://localhost/911incidents.cfm', function (error, response, body) {
 request('http://www.portlandonline.com/scripts/911incidents.cfm', function (error, response, body) {
   if (error) { error(error); }
