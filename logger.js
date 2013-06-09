@@ -71,6 +71,7 @@ var mongoStuffs = function () {
       saved++;
       // when we hit x number of saves, exit
       if (saved === saveLength) {
+        mongoose.disconnect();
         console.log('all done saving, exiting');
         exit();
       }
@@ -91,6 +92,7 @@ var mongoStuffs = function () {
       console.log('new reports: ' + saveLength);
 
       if (saveLength === 0) {
+        mongoose.disconnect();
         console.log('no new reports');
         exit();
       } else {
