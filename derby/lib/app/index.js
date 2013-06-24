@@ -1,13 +1,45 @@
 var app = require('derby').createApp(module)
   .use(require('derby-ui-boot'))
-  .use(require('../../ui'))
+  .use(require('../../ui'));
 
+app.view.fn('addMarker', function(report) {
+  console.log('addMarker', report.incidentid);
+  var marker = '<script type="text/javascript">' +
+      'new google.maps.Marker({ position: new google.maps.LatLng('+report.latitude+','+report.longitude+'), map: map, title: "Id: '+report.incidentid+'" });' +
+      '</script>';
+  return marker;
+});
 
 // ROUTES //
 
 // Derby routes are rendered on the client and the server
-app.get('/', function(page) {
-  page.render('home');
+app.get('/', function(page, model, params, next) {
+  // Create a mongo query that gets the current user's items
+  var itemsQuery = model.query('reports', {$orderby: { updated: -1 } });
+
+  // Get the inital data and subscribe to any updates
+  model.subscribe(itemsQuery, function(err) {
+    if (err) return next(err);
+
+    // Create references that can be used in templates or controller methods
+    itemsQuery.ref('_page.reports');
+    page.render('home');
+  });
+});
+
+app.get('/reports', function(page, model, params, next) {
+  // Create a mongo query that gets the current user's items
+  var itemsQuery = model.query('reports', {$orderby: { updated: -1 } });
+
+  // Get the inital data and subscribe to any updates
+  model.subscribe(itemsQuery, function(err) {
+    if (err) return next(err);
+
+    // Create references that can be used in templates or controller methods
+    itemsQuery.ref('_page.reports');
+
+    page.render('reports');
+  });
 });
 
 app.get('/list', function(page, model, params, next) {
@@ -33,8 +65,14 @@ app.get('/list', function(page, model, params, next) {
   });
 });
 
-
 // CONTROLLER FUNCTIONS //
+
+/*app.fn('report.add', function(e, el) {
+  var newItem = this.model.del('_page.newItem');
+  if (!newItem) return;
+  this.model.add('reports', newItem);
+});*/
+
 
 app.fn('list.add', function(e, el) {
   var newItem = this.model.del('_page.newItem');

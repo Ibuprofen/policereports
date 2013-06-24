@@ -1,0 +1,33 @@
+<Body:>
+  <div class="row">
+    <form class="span3" x-bind="submit: report.add">
+      <h3>Add item</h3>
+      <fieldset>
+        <label>Name</label>
+        <input type="text" value={_page.newItem.title}>
+        <label>Note</label>
+        <textarea>{_page.newItem.content}</textarea>
+        <div>
+          <button type="submit" class="btn">Add</button>
+        </div>
+      </fieldset>
+    </form>
+    <div class="span8 offset1">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Content</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each _page.reports as :report}
+            <tr>
+              <td>{{:report.title}}</td>
+              <td>{{unescape :report.content}}</td>
+            </tr>
+          {/}
+        </tbody>
+      </table>
+    </div>
+  </div>

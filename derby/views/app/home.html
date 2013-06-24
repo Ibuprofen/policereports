@@ -1,32 +1,24 @@
 <Body:>
-  <div class="jumbotron">
-    <h1>Hello world!</h1>
-    <p class="lead">Cras justo odio, dapibus ac facilisis in, egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
-    <a class="btn btn-large btn-success" href="/list">Try it now</a>
-  </div>
+  <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD0ucL9ODjAXLeamCcS4fTuHYfKr_6TndE&sensor=true"></script>
+  <div id="googlemap"></div>
+  <div class="jumbotron"></div>
 
-  <hr>
 
-  <div class="row-fluid marketing">
-    <div class="span6">
-      <h4>Subheading</h4>
-      <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
+<script type="text/javascript">
+  var map;
+  function mapInit() {
+    console.log('initializing google map');
+    var mapOptions = {
+        zoom: 12,
+        center: new google.maps.LatLng(45.523292, -122.675056),
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+    map = new google.maps.Map(document.getElementById('googlemap'), mapOptions);
+  }
+  google.maps.event.addDomListener(window, 'load', mapInit());
+</script>
 
-      <h4>Subheading</h4>
-      <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum.</p>
-
-      <h4>Subheading</h4>
-      <p>Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
-    </div>
-
-    <div class="span6">
-      <h4>Subheading</h4>
-      <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
-
-      <h4>Subheading</h4>
-      <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum.</p>
-
-      <h4>Subheading</h4>
-      <p>Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
-    </div>
-  </div>
+{#each _page.reports as :report}
+  {{unescaped addMarker(:report)}}
+  <div>{{:report.incidentid}} - {{:report.title}}</div>
+{/}
