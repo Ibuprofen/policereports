@@ -15,7 +15,7 @@ app.view.fn('addMarker', function(report) {
 // Derby routes are rendered on the client and the server
 app.get('/', function(page, model, params, next) {
   // Create a mongo query that gets the current user's items
-  var itemsQuery = model.query('reports', {$orderby: { updated: -1 } });
+  var itemsQuery = model.query('reports', {$orderby: { updated: -1 }, $limit: 200 });
 
   // Get the inital data and subscribe to any updates
   model.subscribe(itemsQuery, function(err) {
