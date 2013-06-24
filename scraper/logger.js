@@ -20,8 +20,13 @@ var exit = function(status, message) {
 
 // set us up the stores
 redis.select(process.env.REDIS_DB || 1);
+// Get Mongo configuration
+var mongoUrl = process.env.MONGO_URL || process.env.MONGOHQ_URL ||
+  'mongodb://localhost:27017/policereports';
+
+// The store creates models and syncs data
 var store = racer.createStore({
-  db: liveDbMongo('localhost:27017/project?auto_reconnect', {safe: true}),
+  db: liveDbMongo(mongoUrl + '?auto_reconnect', {safe: true}),
   redis: redis
 });
 var model = store.createModel();
