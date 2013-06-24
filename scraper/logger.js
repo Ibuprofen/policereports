@@ -1,135 +1,105 @@
-var util = require('util'),
+var liveDbMongo = require('livedb-mongo'),
+    redis = require('redis').createClient(),
+    racer = require('racer'),
+    util = require('util'),
     request = require('request'),
     _ = require('underscore'),
     xml2js = require('xml2js'),
-    parser = new xml2js.Parser({attrkey: '_'}),
-    mongoose = require('mongoose'),
+    parser = new xml2js.Parser({ attrkey: '_', explicitArray: false }),
     EventEmitter = require('events').EventEmitter,
     events = new EventEmitter(),
-    incidents,
     saved = 0;
 
+// couple of helpers
 var error = function (arg) { console.log(arg); };
-
-var exit = function(status) {
+var exit = function(status, message) {
   status = status || 0;
+  if (message) { console.log(message); }
   process.exit(status);
 };
 
+// set us up the stores
+redis.select(process.env.REDIS_DB || 1);
+var store = racer.createStore({
+  db: liveDbMongo('localhost:27017/project?auto_reconnect', {safe: true}),
+  redis: redis
+});
+var model = store.createModel();
+
+// our json object is ready weooo
+events.once('data:parse', function (incidents) {
+  // reports from the feed
+  var allIncidentIds = [];
+  incidents.forEach(function(source) {
+    allIncidentIds.push(source.incidentid);
+  });
+
+  // reports already in the database
+  var knownIncidentIds = [];
+  var reportQuery = model.query('reports',{ incidentid: { $in: allIncidentIds }});
+  reportQuery.fetch(function(err) {
+    if (err) error(err);
+
+    // actually run the query
+    var results = reportQuery.get();
+
+    // so we can compute difference
+    results.forEach(function (result) {
+      knownIncidentIds.push(result.incidentid);
+    });
+
+    // filter out the reports we already have
+    var newIncidentIds = _.difference(allIncidentIds, knownIncidentIds);
+    console.log('newIncidentIds (number of new reports):', newIncidentIds.length);
+
+    // nothing to insert
+    if (newIncidentIds.length === 0) {
+      exit(0, 'Nothing to do');
+    }
+
+    // insert the new reports
+    newIncidentIds.forEach(function (id) {
+      // we need the whole object
+      var incident = _.find(incidents, function (obj) {
+        return (obj.incidentid === id) || false;
+      });
+      model.add('reports', incident, function (err) {
+        if (err) error(err);
+        console.log('added: ', incident.incidentid);
+        events.emit('data:save', newIncidentIds.length);
+      });
+    });
+  });
+
+  // exit process when we're done inserting everything
+  events.on('data:save', function (limit) {
+    saved++;
+    if (saved === limit) exit(0, 'All done');
+  });
+});
+
 // add additional attributes to each report
 var dataSetup = function (xml, json) {
-  //console.log(util.inspect(json.feed.entry, false, null));
-
   var objs = [];
 
   // iterate over each report and setup attributes
   json.feed.entry.forEach(function (report) {
+    // our own attributes
     var attributes = {
-      _incidentid: report.id.toString().split('/')[1],
-      _lat: report['georss:point'].toString().split(' ')[0],
-      _long: report['georss:point'].toString().split(' ')[1]
+      incidentid: report.id.split('/')[1],
+      feedid: report.id,
+      latitude: report['georss:point'].split(' ')[0],
+      longitude: report['georss:point'].split(' ')[1]
     };
     // extend the report with our new attributes
     entry = _.extend(report, attributes);
+    delete report.id; // let racer handle the id generation
 
     objs.push(entry);
   });
 
-  events.emit('data:ready');
-
   return objs;
 };
-
-var mongoStuffs = function () {
-  var reportSchema = mongoose.Schema({
-    'id': String,
-    'title': String,
-    'updated': { type: Date },
-    'summary': String,
-    'category': String,
-    'published': { type: Date },
-    'georss:point': String,
-    'content': String,
-    '_incidentid': String,
-    '_lat': String,
-    '_long': String
-  });
-  reportSchema.set('autoIndex', false);
-
-  var Report = mongoose.model('Report', reportSchema);
-
-  // query time
-  var db = mongoose.connection;
-  db.on('error', console.error.bind(console, 'connection error:'));
-  db.once('open', function () {
-
-    var forInsert = [];
-
-    console.log('db open');
-
-    events.on('report:save', function (saveLength) {
-      saved++;
-      // when we hit x number of saves, exit
-      if (saved === saveLength) {
-        mongoose.disconnect();
-        console.log('all done saving, exiting');
-        exit();
-      }
-    });
-
-    var incidentIds = [];
-    incidents.forEach(function(source) {
-      incidentIds.push(source._incidentid);
-    });
-
-    // attempt to query for all reports, diff will show what to insert as new
-    Report.find({ _incidentid: { $in: incidentIds } }, function (err, results) {
-      if (err) { error(err); }
-
-      console.log('finished: ' + results.length);
-
-      var saveLength = incidents.length - results.length;
-      console.log('new reports: ' + saveLength);
-
-      if (saveLength === 0) {
-        mongoose.disconnect();
-        console.log('no new reports');
-        exit();
-      } else {
-
-        // group the ids that werent found
-        var foundIds = [];
-        results.forEach(function (result) {
-          foundIds.push(result._incidentid);
-        });
-        console.log('incidentIds.length: ' + incidentIds.length);
-        console.log('foundIds.length: ' + foundIds.length);
-        var newIds = _.difference(incidentIds, foundIds);
-        console.log('newIds.length: ' + newIds.length);
-
-        // loop thru incidents, save if we dont have this report yet
-        incidents.forEach(function (specific) {
-          if (_.contains(newIds, specific._incidentid) === true) {
-            Report(specific).save(function (err2, result2) {
-              if (err2) { error(err2); }
-              console.log('saved: ' + specific._incidentid);
-              events.emit('report:save', saveLength);
-            });
-          }
-        });
-
-      }
-
-    }); // Report.find
-  }); // db.once
-};
-
-// on json parsed, trigger queries by connecting database
-events.once('data:ready', function () {
-  mongoStuffs();
-  // triggers mongo events
-  mongoose.connect('mongodb://localhost/policereports');
-});
 
 
 // request feed
@@ -140,8 +110,8 @@ request('http://www.portlandonline.com/scripts/911incidents.cfm', function (erro
   if (error) { error(error); }
   if (!error && response.statusCode == 200) {
     parser.addListener('end', function(json) {
-      // populate global incidents object with json
-      incidents = dataSetup(body, json);
+      // pass on the json object
+      events.emit('data:parse', dataSetup(body, json));
     });
     parser.parseString(body); // xml to json
   }
