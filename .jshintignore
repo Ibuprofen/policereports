@@ -1,3 +1,2 @@
-*/node_modules
-node_modules/*
-node_modules
+derby/node_modules/*
+scraper/node_modules/*
