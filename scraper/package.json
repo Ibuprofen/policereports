@@ -1,0 +1,15 @@
+{
+  "name": "scraper",
+  "description": "",
+  "version": "0.0.2",
+  "dependencies": {
+    "racer": "0.5.4",
+    "racer-browserchannel": "~0.1.x",
+    "livedb-mongo": "~0.1.x",
+    "redis": "~0.8.x",
+    "underscore": "1.4.x",
+    "request": "2.21.x",
+    "xml2js": "0.2.x"
+  },
+  "private": true
+}
