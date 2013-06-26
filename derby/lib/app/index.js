@@ -3,11 +3,27 @@ var app = require('derby').createApp(module)
   .use(require('../../ui'));
 
 app.view.fn('addMarker', function(report) {
-  console.log('addMarker', report.incidentid);
-  var marker = '<script type="text/javascript">' +
-      'new google.maps.Marker({ position: new google.maps.LatLng('+report.latitude+','+report.longitude+'), map: map, draggable: false, animation: google.maps.Animation.DROP, title: "Id: '+report.incidentid+'" });' +
-      '</script>';
-  return marker;
+  console.log('addMarker', report.reportid);
+  return '<script type="text/javascript">' +
+            'markers["'+report.incidentid+'"] = '+
+              'new google.maps.Marker({' +
+                'position: new google.maps.LatLng('+report.latitude+','+report.longitude+'), ' +
+                'map: map,' +
+                'draggable: false,' +
+                'animation: google.maps.Animation.DROP,' +
+                'title: "Id: '+report.incidentid+'"' +
+              '});' +
+            ';'+
+
+'infoWindows["'+report.incidentid+'"] = new google.maps.InfoWindow({' +
+  'content: "blah";' +
+'});' +
+
+'google.maps.event.addListener(markers["'+report.incidentid+'"], "click", function() {' +
+  'infoWindows["'+report.incidentid+'"].open(map,markers["'+report.incidentid+'"]);' +
+'});' +
+
+          '</script>';
 });
 
 // ROUTES //

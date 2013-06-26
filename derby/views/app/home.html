@@ -1,11 +1,15 @@
 <Body:>
-  <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD0ucL9ODjAXLeamCcS4fTuHYfKr_6TndE&sensor=true"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+  <script src="//maps.googleapis.com/maps/api/js?v=3.exp&key=AIzaSyD0ucL9ODjAXLeamCcS4fTuHYfKr_6TndE&sensor=true"></script>
   <div id="googlemap"></div>
   <div class="jumbotron"></div>
 
 
 <script type="text/javascript">
-  var map;
+  var map,
+      markers = [],
+      infoWindows = [];
+
   function mapInit() {
     console.log('initializing google map');
     var mapOptions = {
@@ -16,9 +20,22 @@
     map = new google.maps.Map(document.getElementById('googlemap'), mapOptions);
   }
   google.maps.event.addDomListener(window, 'load', mapInit());
+
+  var openMarker = function () {
+function myclick(i) {
+  google.maps.event.trigger(gmarkers[i], "click");
+}
+
+  };
+  $('body').on('click', '.js-incident-link', function  (e) {
+    e.preventDefault();
+    var id = $(this).data('incidentid');
+    console.log(id + ' clicked');
+    google.maps.event.trigger(markers[id], "click");
+  });
 </script>
 
 {#each _page.reports as :report}
   {{unescaped addMarker(:report)}}
-  <div>{{:report.incidentid}} - {{:report.title}}</div>
+  <div><a href="#" class="js-incident-link" data-incidentid="{{:report.incidentid}}">{{:report.incidentid}}</a> - {{:report.title}}</div>
 {/}
