@@ -5,7 +5,7 @@ var app = require('derby').createApp(module)
 app.view.fn('addMarker', function(report) {
   console.log('addMarker', report.incidentid);
   var marker = '<script type="text/javascript">' +
-      'new google.maps.Marker({ position: new google.maps.LatLng('+report.latitude+','+report.longitude+'), map: map, title: "Id: '+report.incidentid+'" });' +
+      'new google.maps.Marker({ position: new google.maps.LatLng('+report.latitude+','+report.longitude+'), map: map, draggable: false, animation: google.maps.Animation.DROP, title: "Id: '+report.incidentid+'" });' +
       '</script>';
   return marker;
 });
@@ -15,7 +15,7 @@ app.view.fn('addMarker', function(report) {
 // Derby routes are rendered on the client and the server
 app.get('/', function(page, model, params, next) {
   // Create a mongo query that gets the current user's items
-  var itemsQuery = model.query('reports', {$orderby: { updated: -1 }, $limit: 200 });
+  var itemsQuery = model.query('reports', {$orderby: { updated: -1 }, $limit: 50 });
 
   // Get the inital data and subscribe to any updates
   model.subscribe(itemsQuery, function(err) {

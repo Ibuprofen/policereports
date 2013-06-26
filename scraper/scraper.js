@@ -97,10 +97,10 @@ var dataSetup = function (xml, json) {
       longitude: report['georss:point'].split(' ')[1]
     };
     // extend the report with our new attributes
-    entry = _.extend(report, attributes);
+    _.extend(report, attributes);
     delete report.id; // let racer handle the id generation
 
-    objs.push(entry);
+    objs.push(report);
   });
 
   return objs;
