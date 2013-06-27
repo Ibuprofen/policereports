@@ -32,5 +32,6 @@
 
 {#each _page.reports as :report}
   {{unescaped addMarker(:report)}}
+  {{log(path(':report'))}}
   <div><a href="#" class="js-incident-link" data-incidentid="{{:report.incidentid}}">{{:report.incidentid}}</a> - {{:report.title}}</div>
 {/}
