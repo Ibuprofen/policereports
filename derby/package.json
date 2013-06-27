@@ -16,7 +16,8 @@
     "livedb-mongo": "0.1.3",
     "racer-browserchannel": "0.1.0",
     "connect-mongo": "0.3.2",
-    "derby-ui-boot": "0.1.x"
+    "derby-ui-boot": "0.1.x",
+    "underscore": "1.4.x"
   },
   "engines": {
     "node": "0.10.x"

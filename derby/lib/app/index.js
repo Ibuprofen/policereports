@@ -1,10 +1,12 @@
 var app = require('derby').createApp(module)
   .use(require('derby-ui-boot'))
   .use(require('../../ui'));
+var _ = require('underscore');
 
 app.view.fn('addMarker', function(report) {
-  console.log('addMarker', report.reportid);
+  console.log('addMarker', report.incidentid);
   return '<script type="text/javascript">' +
+
             'markers["'+report.incidentid+'"] = '+
               'new google.maps.Marker({' +
                 'position: new google.maps.LatLng('+report.latitude+','+report.longitude+'), ' +
@@ -16,7 +18,8 @@ app.view.fn('addMarker', function(report) {
             ';'+
 
 'infoWindows["'+report.incidentid+'"] = new google.maps.InfoWindow({' +
-  'content: "blah";' +
+  'content: "<div>'+report.title+'</div>'+//report.content.replace(/\n/g, '')+
+'"'+
 '});' +
 
 'google.maps.event.addListener(markers["'+report.incidentid+'"], "click", function() {' +
